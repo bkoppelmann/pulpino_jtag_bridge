@@ -322,8 +322,8 @@ int jtag_enumerate_chain(uint32_t **id_array, int *num_devices)
   const unsigned int done_code = 0x3f;  // invalid_code is altered, we keep this for comparison (minus the start bit)
   int devindex = 0;  // which device we are currently trying to detect
   uint32_t tempID;
-  uint32_t temp_manuf_code;
-  uint32_t temp_rest_code;
+  uint32_t temp_manuf_code=0;
+  uint32_t temp_rest_code=0;
   uint8_t start_bit = 0;
   uint32_t *idcodes;
   int reallocs = 0;
