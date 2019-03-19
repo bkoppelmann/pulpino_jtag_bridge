@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <unistd.h>
 #include <stdarg.h>
-#include <string.h> 
+#include <string.h>
 #include <sys/types.h>
 
 #ifdef __cplusplus
@@ -26,7 +26,7 @@ int num_devices = 0;
 int target_dev_pos = 0;
 const char *name_pulpino = "PULPino";
 
-JtagIF::JtagIF() 
+JtagIF::JtagIF()
 {
   uint32_t info;
   uint32_t data;
@@ -42,13 +42,12 @@ JtagIF::JtagIF()
     printf("Failed to initialize cable, aborting.\n");
     exit(1);
   }
-
   this->configure_chain();
 
-  adbg_select_module(0);  
+  adbg_select_module(0);
 }
 
-JtagIF::~JtagIF() 
+JtagIF::~JtagIF()
 {
 
 }
@@ -58,7 +57,7 @@ bool JtagIF::configure_chain()
 {
   int i;
   unsigned int manuf_id;
-  uint32_t cmd;  
+  uint32_t cmd;
   uint32_t id_read;
   const char *name;
   int irlen;
@@ -67,7 +66,7 @@ bool JtagIF::configure_chain()
   err |= tap_reset();
   err |= jtag_enumerate_chain(&idcodes, &num_devices);
 
-  if(err != APP_ERR_NONE) 
+  if(err != APP_ERR_NONE)
   {
     printf("Error %s enumerating JTAG chain, aborting.\n", get_err_string(err));
     return false;
@@ -90,7 +89,7 @@ bool JtagIF::configure_chain()
 
   config_set_IR_size(irlen);
   config_set_IR_postfix_bits(0);
-  config_set_IR_prefix_bits(0);  
+  config_set_IR_prefix_bits(0);
   config_set_DR_prefix_bits(num_devices - target_dev_pos - 1);
   config_set_DR_postfix_bits(target_dev_pos);
 
@@ -101,7 +100,7 @@ bool JtagIF::configure_chain()
   cmd = 0x2; // IDCODE cmd
   err |= jtag_get_idcode(cmd, &id_read);
 
-  if(err != APP_ERR_NONE) 
+  if(err != APP_ERR_NONE)
   {
     printf("Error %s checking IDCODE, aborting.\n", get_err_string(err));
     return false;
@@ -113,8 +112,8 @@ bool JtagIF::configure_chain()
     printf("Warning: IDCODE sanity test failed.  Read IDCODE 0x%08X, expected 0x%08X\n", id_read, idcodes[target_dev_pos]);
 
   // Select the debug unit in the TAP.
-  if(err |= tap_enable_debug_module()) 
-  {  
+  if(err |= tap_enable_debug_module())
+  {
     printf("Error %s enabling debug module, aborting.\n", get_err_string(err));
     return false;
   }
@@ -149,7 +148,7 @@ bool JtagIF::access(bool write, unsigned int addr, int size, char* buffer)
   {
     while (size >= 4)
     {
-      retvar = retvar && this->mem_read(addr, &rdata);  
+      retvar = retvar && this->mem_read(addr, &rdata);
 
       buffer[0] = rdata;
       buffer[1] = rdata >> 8;
@@ -160,10 +159,10 @@ bool JtagIF::access(bool write, unsigned int addr, int size, char* buffer)
       size   -= 4;
       buffer += 4;
     }
-    
+
     if (size > 0)
     {
-      retvar = retvar && this->mem_read(addr, &rdata);  
+      retvar = retvar && this->mem_read(addr, &rdata);
 
       if (size == 2)
       {

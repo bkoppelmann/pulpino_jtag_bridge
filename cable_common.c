@@ -2,17 +2,17 @@
    Copyright (C) 2001 Marko Mlinar, markom@opencores.org
    Copyright (C) 2004 György Jeney, nog@sdf.lonestar.org
    Copyright (C) 2008 - 2010 Nathan Yawn, nathan.yawn@opencores.org
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
@@ -25,7 +25,7 @@
 
 #include "cable_common.h"
 
-#include "cable_ft2232.h"  
+#include "cable_ft2232.h"
 
 #include "errcodes.h"
 
@@ -41,7 +41,7 @@ void cable_setup(void)
   jtag_cables = cable_ftdi_get_driver();
 }
 
-/* Calls the init function of the cable 
+/* Calls the init function of the cable
  */
 int cable_init()
 {
@@ -65,27 +65,27 @@ const char *cable_get_args()
 /////////////////////////////////////////////////////////////////////////////////
 // Cable API Functions
 
-int cable_write_stream(uint32_t *stream, int len_bits, int set_last_bit) 
+int cable_write_stream(uint32_t *stream, int len_bits, int set_last_bit)
 {
   return jtag_cables->stream_out_func(stream, len_bits, set_last_bit);
 }
 
-int cable_read_write_stream(uint32_t *outstream, uint32_t *instream, int len_bits, int set_last_bit) 
+int cable_read_write_stream(uint32_t *outstream, uint32_t *instream, int len_bits, int set_last_bit)
 {
   return jtag_cables->stream_inout_func(outstream, instream, len_bits, set_last_bit);
 }
 
-int cable_write_bit(uint8_t packet) 
+int cable_write_bit(uint8_t packet)
 {
   return jtag_cables->bit_out_func(packet);
 }
 
-int cable_read_write_bit(uint8_t packet_out, uint8_t *bit_in) 
+int cable_read_write_bit(uint8_t packet_out, uint8_t *bit_in)
 {
   return jtag_cables->bit_inout_func(packet_out, bit_in);
 }
 
-int cable_flush(void) 
+int cable_flush(void)
 {
   if(jtag_cables->flush_func != NULL)
     return jtag_cables->flush_func();
@@ -104,7 +104,7 @@ int cable_flush(void)
  * So, routines which assume new data is available will need to start by dropping
  * the clock.
  */
-int cable_common_write_bit(uint8_t packet) 
+int cable_common_write_bit(uint8_t packet)
 {
   uint8_t data = TRST_BIT;  // TRST is active low, don't clear unless /set/ in 'packet'
   int err = APP_ERR_NONE;
@@ -122,7 +122,7 @@ int cable_common_write_bit(uint8_t packet)
   return err;
 }
 
-int cable_common_read_write_bit(uint8_t packet_out, uint8_t *bit_in) 
+int cable_common_read_write_bit(uint8_t packet_out, uint8_t *bit_in)
 {
   uint8_t data = TRST_BIT;  //  TRST is active low, don't clear unless /set/ in 'packet'
   int err = APP_ERR_NONE;
@@ -142,7 +142,7 @@ int cable_common_read_write_bit(uint8_t packet_out, uint8_t *bit_in)
 /* Writes bitstream via bit-bang. Can be used by any driver which does not have a high-speed transfer function.
  * Transfers LSB to MSB of stream[0], then LSB to MSB of stream[1], etc.
  */
-int cable_common_write_stream(uint32_t *stream, int len_bits, int set_last_bit) 
+int cable_common_write_stream(uint32_t *stream, int len_bits, int set_last_bit)
 {
   int i;
   int index = 0;
@@ -151,19 +151,19 @@ int cable_common_write_stream(uint32_t *stream, int len_bits, int set_last_bit)
   int err = APP_ERR_NONE;
 
   debug("writeStrm%d(", len_bits);
-  for(i = 0; i < len_bits - 1; i++) 
+  for(i = 0; i < len_bits - 1; i++)
   {
     out = (stream[index] >> bits_this_index) & 1;
     err |= cable_write_bit(out);
     debug("%i", out);
     bits_this_index++;
-    if(bits_this_index >= 32) 
+    if(bits_this_index >= 32)
     {
       index++;
       bits_this_index = 0;
     }
   }
-  
+
   out = (stream[index] >>(len_bits - 1)) & 0x1;
   if(set_last_bit) out |= TMS;
   err |= cable_write_bit(out);
@@ -174,7 +174,7 @@ int cable_common_write_stream(uint32_t *stream, int len_bits, int set_last_bit)
 /* Gets bitstream via bit-bang.  Can be used by any driver which does not have a high-speed transfer function.
  * Transfers LSB to MSB of stream[0], then LSB to MSB of stream[1], etc.
  */
-int cable_common_read_stream(uint32_t *outstream, uint32_t *instream, int len_bits, int set_last_bit) 
+int cable_common_read_stream(uint32_t *outstream, uint32_t *instream, int len_bits, int set_last_bit)
 {
   int i;
   int index = 0;
@@ -185,32 +185,32 @@ int cable_common_read_stream(uint32_t *outstream, uint32_t *instream, int len_bi
   instream[0] = 0;
 
   debug("readStrm%d(", len_bits);
-  for(i = 0; i < (len_bits - 1); i++) 
-  {      
+  for(i = 0; i < (len_bits - 1); i++)
+  {
     outval = (outstream[index] >> bits_this_index) & 0x1;
     err |= cable_read_write_bit(outval, &inval);
     debug("%i", inval);
     instream[index] |= (inval << bits_this_index);
     bits_this_index++;
-    if(bits_this_index >= 32) 
+    if(bits_this_index >= 32)
     {
       index++;
       bits_this_index = 0;
       instream[index] = 0;  // It's safe to do this, because there's always at least one more bit
-    }   
+    }
   }
-  
+
   if (set_last_bit)
     outval = ((outstream[index] >> (len_bits - 1)) & 1) | TMS;
   else
-    outval = (outstream[index] >> (len_bits - 1)) & 1; 
-  
+    outval = (outstream[index] >> (len_bits - 1)) & 1;
+
   err |= cable_read_write_bit(outval, &inval);
   debug("%i", inval);
-  instream[index] |= (inval << bits_this_index);  
+  instream[index] |= (inval << bits_this_index);
 
-  debug(") = 0x%lX\n", instream[0]);
-  
+  debug(") = 0x%x\n", instream[0]);
+
   return err;
 }
 

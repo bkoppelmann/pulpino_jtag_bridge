@@ -1,17 +1,17 @@
 /* cable_ft2232.c - FT2232 based cable driver for the Advanced JTAG Bridge
    Copyright (C) 2008 Arnim Laeuger, arniml@opencores.org
    Copyright (C) 2009 José Ignacio Villar, jose@dte.us.es
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
@@ -34,7 +34,7 @@
 
 int debug = 0;
 
-jtag_cable_t ft2232_cable_driver = 
+jtag_cable_t ft2232_cable_driver =
 {
     .name = "ft2232",
     .inout_func = NULL,
@@ -79,7 +79,7 @@ static int usbconn_ftdi_write(usbconn_t *conn, uint8_t *buf, int len, int recv);
 static int usbconn_ftdi_mpsse_open(usbconn_t *conn);
 static int usbconn_ftdi_close(usbconn_t *conn);
 
-usbconn_driver_t usbconn_ft2232_mpsse_driver = 
+usbconn_driver_t usbconn_ft2232_mpsse_driver =
 {
   "ftdi-mpsse",
   usbconn_ftdi_connect,
@@ -90,13 +90,13 @@ usbconn_driver_t usbconn_ft2232_mpsse_driver =
   usbconn_ftdi_write
 };
 
-usbconn_cable_t usbconn_ft2232_mpsse_CableID2= 
+usbconn_cable_t usbconn_ft2232_mpsse_CableID2=
 {
   "Olimex ARM-USB-OCD-H",   /* cable name */
   "Olimex ARM-USB-OCD-H",   /* string pattern, not used */
   "ftdi-mpsse",             /* default usbconn driver */
   0x15ba,                   /* VID */
-  0x002b                    /* PID */
+  0x002a                    /* PID */
 };
 
 static usbconn_t *ft2232_device;
@@ -106,7 +106,7 @@ static usbconn_t *ft2232_device;
 /// libftdi wrappers for debugging purposes.
 /// ----------------------------------------------------------------------------------------------
 
-void print_buffer(unsigned char *buf, int size) 
+void print_buffer(unsigned char *buf, int size)
 {
   int i = 0;
   for(i = 0; i < size; i++)
@@ -114,109 +114,109 @@ void print_buffer(unsigned char *buf, int size)
 
 }
 
-int my_ftdi_write_data(struct ftdi_context *ftdi, unsigned char *buf, int size) 
+int my_ftdi_write_data(struct ftdi_context *ftdi, unsigned char *buf, int size)
 {
   debug("[MYDBG] ftdi_write_data(ftdi, buf=BUFFER[%d], size=%d);\n", size, size);
-  if (debug > 1) 
+  if (debug > 1)
     print_buffer(buf, size);
   return ftdi_write_data(ftdi, buf, size);
 }
 
-char *my_ftdi_get_error_string (struct ftdi_context *ftdi) 
+char *my_ftdi_get_error_string (struct ftdi_context *ftdi)
 {
   debug("[MYDBG] ftdi_get_error_string(ftdi);\n");
-  return ftdi_get_error_string (ftdi);
+  return (char*) ftdi_get_error_string (ftdi);
 }
 
-int my_ftdi_read_data(struct ftdi_context *ftdi, unsigned char *buf, int size) 
+int my_ftdi_read_data(struct ftdi_context *ftdi, unsigned char *buf, int size)
 {
   int ret = 0;
   debug("[MYDBG] ftdi_read_data(ftdi, buf=BUFFER[%d], size=%d);\n", size, size);
   ret = ftdi_read_data(ftdi, buf, size);
-  if(debug) 
+  if(debug)
     print_buffer(buf, size);
   return ret;
 }
 
-int my_ftdi_usb_open_desc(struct ftdi_context *ftdi, int vendor, int product, const char* description, const char* serial) 
+int my_ftdi_usb_open_desc(struct ftdi_context *ftdi, int vendor, int product, const char* description, const char* serial)
 {
   debug("[MYDBG] ftdi_usb_open_desc(ftdi, vendor=%d, product=%d, description=DESCRIPTION, serial=SERIAL);\n", vendor, product);
   return ftdi_usb_open_desc(ftdi, vendor, product, description, serial);
 }
 
-void my_ftdi_deinit(struct ftdi_context *ftdi) 
+void my_ftdi_deinit(struct ftdi_context *ftdi)
 {
   debug("[MYDBG] ftdi_deinit(ftdi);\n");
   ftdi_deinit(ftdi);
 }
 
-int my_ftdi_usb_purge_buffers(struct ftdi_context *ftdi) 
+int my_ftdi_usb_purge_buffers(struct ftdi_context *ftdi)
 {
   debug("[MYDBG] ftdi_usb_purge_buffers(ftdi);\n");
   return ftdi_usb_purge_buffers(ftdi);
 }
 
-int my_ftdi_usb_purge_rx_buffer(struct ftdi_context *ftdi) 
+int my_ftdi_usb_purge_rx_buffer(struct ftdi_context *ftdi)
 {
   debug("[MYDBG] ftdi_usb_purge_rx_buffer(ftdi);\n");
   return ftdi_usb_purge_rx_buffer(ftdi);
 }
 
-int my_ftdi_usb_purge_tx_buffer(struct ftdi_context *ftdi) 
+int my_ftdi_usb_purge_tx_buffer(struct ftdi_context *ftdi)
 {
   debug("[MYDBG] ftdi_usb_purge_tx_buffer(ftdi);\n");
   return ftdi_usb_purge_tx_buffer(ftdi);
 }
 
-int my_ftdi_usb_reset(struct ftdi_context *ftdi) 
+int my_ftdi_usb_reset(struct ftdi_context *ftdi)
 {
   debug("[MYDBG] ftdi_usb_reset(ftdi);\n");
   return ftdi_usb_reset(ftdi);
 }
 
-int my_ftdi_set_latency_timer(struct ftdi_context *ftdi, unsigned char latency) 
+int my_ftdi_set_latency_timer(struct ftdi_context *ftdi, unsigned char latency)
 {
   debug("[MYDBG] ftdi_set_latency_timer(ftdi, latency=0x%02x);\n", latency);
   return ftdi_set_latency_timer(ftdi, latency);
 }
 
-int my_ftdi_set_baudrate(struct ftdi_context *ftdi, int baudrate) 
+int my_ftdi_set_baudrate(struct ftdi_context *ftdi, int baudrate)
 {
   debug("[MYDBG] ftdi_set_baudrate(ftdi, baudrate=%d);\n", baudrate);
   return ftdi_set_baudrate(ftdi, baudrate);
 }
 
-int my_ftdi_read_data_set_chunksize(struct ftdi_context *ftdi, unsigned int chunksize) 
+int my_ftdi_read_data_set_chunksize(struct ftdi_context *ftdi, unsigned int chunksize)
 {
   debug("[MYDBG] ftdi_read_data_set_chunksize(ftdi, chunksize=%u);\n", chunksize);
   return ftdi_read_data_set_chunksize(ftdi, chunksize);
 }
 
-int my_ftdi_write_data_set_chunksize(struct ftdi_context *ftdi, unsigned int chunksize) 
+int my_ftdi_write_data_set_chunksize(struct ftdi_context *ftdi, unsigned int chunksize)
 {
   debug("[MYDBG] ftdi_write_data_set_chunksize(ftdi, chunksize=%u);\n", chunksize);
   return ftdi_write_data_set_chunksize(ftdi, chunksize);
 }
 
-int my_ftdi_set_event_char(struct ftdi_context *ftdi, unsigned char eventch, unsigned char enable) 
+int my_ftdi_set_event_char(struct ftdi_context *ftdi, unsigned char eventch, unsigned char enable)
 {
   debug("[MYDBG] ftdi_set_event_char(ftdi, eventch=0x%02x, enable=0x%02x);\n", eventch, enable);
   return ftdi_set_event_char(ftdi, eventch, enable);
 }
 
-int my_ftdi_set_error_char(struct ftdi_context *ftdi, unsigned char errorch, unsigned char enable) 
+int my_ftdi_set_error_char(struct ftdi_context *ftdi, unsigned char errorch, unsigned char enable)
 {
   debug("[MYDBG] ftdi_set_error_char(ftdi, errorch=0x%02x, enable=0x%02x);\n", errorch, enable);
   return ftdi_set_error_char(ftdi, errorch, enable);
 }
 
-int my_ftdi_set_bitmode(struct ftdi_context *ftdi, unsigned char bitmask, unsigned char mode) 
+int my_ftdi_set_bitmode(struct ftdi_context *ftdi, unsigned char bitmask, unsigned char mode)
 {
   debug("[MYDBG] ftdi_set_bitmode(ftdi, bitmask=0x%02x, mode=0x%02x);\n", bitmask, mode);
   return ftdi_set_bitmode(ftdi, bitmask, mode);
 }
 
-int my_ftdi_usb_close(struct ftdi_context *ftdi) 
+int my_ftdi_usb_close(struct ftdi_context *ftdi)
 {
   debug("[MYDBG] ftdi_usb_close(ftdi);\n");
   return ftdi_usb_close(ftdi);
@@ -228,15 +228,15 @@ int my_ftdi_usb_close(struct ftdi_context *ftdi)
 /// USBconn FTDI MPSSE subsystem
 /// ----------------------------------------------------------------------------------------------
 
-static int usbconn_ftdi_common_open(usbconn_t *conn) 
+static int usbconn_ftdi_common_open(usbconn_t *conn)
 {
   ftdi_param_t *params = conn->params;
   struct ftdi_context * ftdic = params->ftdic;
   int error;
 
   printf("Initializing USB device\n");
-  
-  if ((error = my_ftdi_usb_open_desc(ftdic, conn->cable->vid, conn->cable->pid, NULL, NULL))) 
+
+  if ((error = my_ftdi_usb_open_desc(ftdic, conn->cable->vid, conn->cable->pid, NULL, NULL)))
   {
     if      (error == -1) printf("usb_find_busses() failed\n");
     else if (error == -2) printf("usb_find_devices() failed\n");
@@ -252,14 +252,14 @@ static int usbconn_ftdi_common_open(usbconn_t *conn)
     my_ftdi_deinit(ftdic);
     ftdic = NULL;
 
-    printf("Can't open FTDI usb device\n"); 
+    printf("Can't open FTDI usb device\n, error=%d", error);
     return(-1);
   }
 
   return 0;
 }
 
-static int seq_purge(struct ftdi_context *ftdic, int purge_rx, int purge_tx) 
+static int seq_purge(struct ftdi_context *ftdic, int purge_rx, int purge_tx)
 {
   int r = 0;
   unsigned char buf;
@@ -272,9 +272,9 @@ static int seq_purge(struct ftdi_context *ftdic, int purge_rx, int purge_tx)
   return r < 0 ? -1 : 0;
 }
 
-static int seq_reset(struct ftdi_context *ftdic) 
+static int seq_reset(struct ftdi_context *ftdic)
 {
-  if (my_ftdi_usb_reset(ftdic) < 0) 
+  if (my_ftdi_usb_reset(ftdic) < 0)
   {
     printf("my_ftdi_usb_reset() failed\n");
     return -1;
@@ -300,7 +300,7 @@ static int usbconn_ftdi_flush(ftdi_param_t *params)
   if ((xferred = my_ftdi_write_data(params->ftdic, params->send_buf, params->send_buffered)) < 0)
     printf("my_ftdi_write_data() failed\n");
 
-  if (xferred < params->send_buffered) 
+  if (xferred < params->send_buffered)
   {
     printf("Written fewer bytes than requested.\n");
     return -1;
@@ -309,9 +309,9 @@ static int usbconn_ftdi_flush(ftdi_param_t *params)
   params->send_buffered = 0;
 
   /* now read all scheduled receive bytes */
-  if (params->to_recv) 
+  if (params->to_recv)
   {
-    if (params->recv_write_idx + params->to_recv > params->recv_buf_len) 
+    if (params->recv_write_idx + params->to_recv > params->recv_buf_len)
     {
       /* extend receive buffer */
       params->recv_buf_len = params->recv_write_idx + params->to_recv;
@@ -319,7 +319,7 @@ static int usbconn_ftdi_flush(ftdi_param_t *params)
         params->recv_buf = (uint8_t *)realloc(params->recv_buf, params->recv_buf_len);
     }
 
-    if (!params->recv_buf) 
+    if (!params->recv_buf)
     {
       printf("Receive buffer does not exist.\n");
       return -1;
@@ -340,7 +340,7 @@ static int usbconn_ftdi_flush(ftdi_param_t *params)
   return xferred < 0 ? -1 : xferred;
 }
 
-static int usbconn_ftdi_read(usbconn_t *conn, uint8_t *buf, int len) 
+static int usbconn_ftdi_read(usbconn_t *conn, uint8_t *buf, int len)
 {
   ftdi_param_t *params = conn->params;
   int cpy_len;
@@ -362,7 +362,7 @@ static int usbconn_ftdi_read(usbconn_t *conn, uint8_t *buf, int len)
     cpy_len = len;
   len -= cpy_len;
 
-  if (cpy_len > 0) 
+  if (cpy_len > 0)
   {
     /* get data from the receive buffer */
     memcpy(buf, &(params->recv_buf[params->recv_read_idx]), cpy_len);
@@ -371,18 +371,18 @@ static int usbconn_ftdi_read(usbconn_t *conn, uint8_t *buf, int len)
       params->recv_read_idx = params->recv_write_idx = 0;
   }
 
-  if (len > 0) 
+  if (len > 0)
   {
     /* need to get more data directly from the device */
     while (recvd == 0)
       if ((recvd = my_ftdi_read_data(params->ftdic, &(buf[cpy_len]), len)) < 0)
         printf("Error from my_ftdi_read_data()\n");
-  } 
+  }
   debug("[MYDBG] READ cpy_len=%u ; len=%u\n", cpy_len, len);
   return recvd < 0 ? -1 : cpy_len + len;
 }
 
-static int usbconn_ftdi_write(usbconn_t *conn, uint8_t *buf, int len, int recv) 
+static int usbconn_ftdi_write(usbconn_t *conn, uint8_t *buf, int len, int recv)
 {
   ftdi_param_t *params = conn->params;
   int xferred = 0;
@@ -403,14 +403,14 @@ static int usbconn_ftdi_write(usbconn_t *conn, uint8_t *buf, int len, int recv)
     return -1;
 
   /* now buffer this write */
-  if (params->send_buffered + len > params->send_buf_len) 
+  if (params->send_buffered + len > params->send_buf_len)
   {
     params->send_buf_len = params->send_buffered + len;
     if (params->send_buf)
       params->send_buf = (uint8_t *)realloc(params->send_buf, params->send_buf_len);
   }
 
-  if (params->send_buf) 
+  if (params->send_buf)
   {
     memcpy(&(params->send_buf[params->send_buffered]), buf, len);
     params->send_buffered += len;
@@ -418,27 +418,27 @@ static int usbconn_ftdi_write(usbconn_t *conn, uint8_t *buf, int len, int recv)
       params->to_recv += recv;
 
     /* immediate write requested, so flush the buffered data */
-    if (recv < 0) 
+    if (recv < 0)
       xferred = usbconn_ftdi_flush(params);
 
     debug("[MYDBG] WRITE inmediate=%s ; xferred=%u ; len=%u\n", ((recv < 0) ? "TRUE" : "FALSE"), xferred, len);
     return xferred < 0 ? -1 : len;
   }
-  else 
+  else
   {
     printf("Send buffer does not exist.\n");
     return -1;
   }
 }
 
-static int usbconn_ftdi_mpsse_open(usbconn_t *conn) 
+static int usbconn_ftdi_mpsse_open(usbconn_t *conn)
 {
   ftdi_param_t *params = conn->params;
   struct ftdi_context *ftdic = params->ftdic;
-  
+
   int r = 0;
 
-  if (usbconn_ftdi_common_open(conn) < 0) 
+  if (usbconn_ftdi_common_open(conn) < 0)
   {
     printf("Connection failed\n");
     return -1;
@@ -476,18 +476,18 @@ static int usbconn_ftdi_mpsse_open(usbconn_t *conn)
     if ((r = my_ftdi_usb_reset(ftdic)) < 0)
       printf("my_ftdi_usb_reset() failed\n");
 
-  if (r >= 0) 
+  if (r >= 0)
     r = seq_purge(ftdic, 1, 0);
 
   /* set TCK Divisor */
-  if (r >= 0) 
+  if (r >= 0)
   {
     uint8_t buf[3] = {TCK_DIVISOR, 0x00, 0x00};
     r = usbconn_ftdi_write(conn, buf, 3, 0);
   }
 
   /* switch off loopback */
-  if (r >= 0) 
+  if (r >= 0)
   {
     uint8_t buf[1] = {LOOPBACK_END};
     r = usbconn_ftdi_write(conn, buf, 1, 0);
@@ -503,7 +503,7 @@ static int usbconn_ftdi_mpsse_open(usbconn_t *conn)
   if (r >= 0)
     r = seq_purge(ftdic, 1, 0);
 
-  if (r < 0) 
+  if (r < 0)
   {
     ftdi_usb_close(ftdic);
     ftdi_deinit(ftdic);
@@ -514,11 +514,11 @@ static int usbconn_ftdi_mpsse_open(usbconn_t *conn)
   return r < 0 ? -1 : 0;
 }
 
-static int usbconn_ftdi_close(usbconn_t *conn) 
+static int usbconn_ftdi_close(usbconn_t *conn)
 {
   ftdi_param_t *params = conn->params;
 
-  if (params->ftdic) 
+  if (params->ftdic)
   {
     my_ftdi_usb_close(params->ftdic);
     my_ftdi_deinit(params->ftdic);
@@ -541,13 +541,13 @@ static void usbconn_ftdi_free(usbconn_t *conn)
   free(conn);
 }
 
-usbconn_t * usbconn_ftdi_connect() 
+usbconn_t * usbconn_ftdi_connect()
 {
   usbconn_t *conn            = malloc(sizeof(usbconn_t));
   ftdi_param_t *params       = malloc(sizeof(ftdi_param_t));
   struct ftdi_context *ftdic = malloc(sizeof(struct ftdi_context));
 
-  if (params) 
+  if (params)
   {
     params->send_buf_len   = FTDX_MAXSEND;
     params->send_buffered  = 0;
@@ -559,7 +559,7 @@ usbconn_t * usbconn_ftdi_connect()
     params->recv_buf       = (uint8_t *) malloc(params->recv_buf_len);
   }
 
-  if (!conn || !params || !ftdic || !params->send_buf || !params->recv_buf) 
+  if (!conn || !params || !ftdic || !params->send_buf || !params->recv_buf)
   {
     printf("Can't allocate memory for ftdi context structures\n");
 
@@ -587,7 +587,7 @@ usbconn_t * usbconn_ftdi_connect()
   /* do a test open with the specified cable paramters,
      alternatively we could use libusb to detect the presence of the
      specified USB device   */
-  if (usbconn_ftdi_common_open(conn) != 0) 
+  if (usbconn_ftdi_common_open(conn) != 0)
   {
     printf("Connection failed\n");
     usbconn_ftdi_free(conn);
@@ -608,7 +608,7 @@ usbconn_t * usbconn_ftdi_connect()
 /// High level functions to generate Tx/Rx commands
 /// ----------------------------------------------------------------------------------------------
 
-int cable_ft2232_write_bytes(usbconn_t *conn, unsigned char *buf, int len, int postread) 
+int cable_ft2232_write_bytes(usbconn_t *conn, unsigned char *buf, int len, int postread)
 {
   int cur_command_size;
   int max_command_size;
@@ -631,7 +631,7 @@ int cable_ft2232_write_bytes(usbconn_t *conn, unsigned char *buf, int len, int p
     mybuf[0] = mybuf[0] | MPSSE_DO_READ;
 
   // We divide the transmitting stream of bytes in chunks with a maximun length of 65536 bytes each.
-  while(len > 0) 
+  while(len > 0)
   {
     cur_chunk_len = min(len, 65536);
     len = len - cur_chunk_len;
@@ -682,13 +682,13 @@ int cable_ft2232_write_bits(usbconn_t *conn, unsigned char *buf, int len, int po
   max_command_size = 3;
   mybuf = (unsigned char *) malloc(max_command_size);
 
-  if(!with_tms) 
+  if(!with_tms)
   {
     /// Command OPCODE: write bits (can write up to 8 bits in a single command)
     max_chunk_len = 8;
     mybuf[0] = MPSSE_DO_WRITE | MPSSE_LSB | MPSSE_WRITE_NEG | MPSSE_BITMODE;
-  } 
-  else 
+  }
+  else
   {
     /// Command OPCODE: 0x4B write bit with tms (can write up to 1 bits in a single command)
     max_chunk_len = 1;
@@ -701,7 +701,7 @@ int cable_ft2232_write_bits(usbconn_t *conn, unsigned char *buf, int len, int po
   // We divide the transmitting stream of bytes in chunks with a maximun length of max_chunk_len bits each.
   i = 0;
   recv = 0;
-  while(len > 0) 
+  while(len > 0)
   {
     cur_chunk_len = min(len, max_chunk_len);
     len = len - cur_chunk_len;
@@ -712,14 +712,14 @@ int cable_ft2232_write_bits(usbconn_t *conn, unsigned char *buf, int len, int po
     debug("\tOPCODE:  0x%x\n", mybuf[0]);
     debug("\tLENGTH:  0x%02x\n", mybuf[1]);
 
-    if(!with_tms) 
+    if(!with_tms)
     {
       /// The last byte of the command is filled with the bits that will be transferred
       debug("\tDATA[%d]  0x%02x\n", (i/8), buf[i/8]);
       mybuf[2] = buf[i/8];
       i = i+8;
     }
-    else 
+    else
     {
       //TODO: seleccionar el bit a transmitir
       mybuf[2] = 0x01 | ((buf[(i/8)] >> (i%8)) << 7);
@@ -734,7 +734,7 @@ int cable_ft2232_write_bits(usbconn_t *conn, unsigned char *buf, int len, int po
       return -1;
 
     // If OK, the update the number of incoming bytes that are being buffered for a posterior read
-    if(postread) 
+    if(postread)
       recv = recv + 1;
   }
   debug("\tPOSTREAD: %u bytes\n", recv);
@@ -759,22 +759,22 @@ int cable_ft2232_read_packed_bits(usbconn_t *conn, uint8_t *buf, int packet_len,
     return 0;
 
   mybuf = (unsigned char *) malloc(packet_len);
-  if((r=usbconn_ftdi_read(conn, mybuf, packet_len)) < 0) 
+  if((r=usbconn_ftdi_read(conn, mybuf, packet_len)) < 0)
   {
     debug("Read failed\n");
     return -1;
   }
 
-  if(bits_per_packet < 8) 
+  if(bits_per_packet < 8)
   {
     // rotate bits to the left side
     for(i = 0; i < packet_len; i++)
     {
-//      debug("[MYDBG] unaligned bits[%d]=%02x\n", i, mybuf[i]);      
+//      debug("[MYDBG] unaligned bits[%d]=%02x\n", i, mybuf[i]);
       mybuf[i] = (mybuf[i] >> (8-bits_per_packet));
 //      debug("[MYDBG]   aligned bits[%d]=%02x\n", i, mybuf[i]);
     }
-    for(i = offset; i < (packet_len*bits_per_packet+offset); i++) 
+    for(i = offset; i < (packet_len*bits_per_packet+offset); i++)
     {
       dst_row = i / 8;
       dst_col = i % 8;
@@ -788,22 +788,22 @@ int cable_ft2232_read_packed_bits(usbconn_t *conn, uint8_t *buf, int packet_len,
         buf[dst_row] = (buf[dst_row] & dst_mask) | ((mybuf[src_row] & src_mask) << (dst_col - src_col));
       else
         buf[dst_row] = (buf[dst_row] & dst_mask) | ((mybuf[src_row] & src_mask) >> (dst_col - src_col));
-    }   
-  } 
+    }
+  }
   else if(bits_per_packet == 8)
   {
     row_offset = offset / 8;
 //    debug("[MYDBG] Row offset=%d\n", row_offset);
     memcpy(&(buf[row_offset]), mybuf, packet_len);
   }
-  else 
+  else
     return -1;
 
 //  debug("read_bits()-> %x\n", *buf);
   return ((r < 1) ? -1 : 0);
 }
 
-int cable_ft2232_write_stream(usbconn_t *conn, unsigned char *buf, int len, int postread, int with_tms) 
+int cable_ft2232_write_stream(usbconn_t *conn, unsigned char *buf, int len, int postread, int with_tms)
 {
   int len_bytes;
   int len_bits;
@@ -822,7 +822,7 @@ int cable_ft2232_write_stream(usbconn_t *conn, unsigned char *buf, int len, int 
   if(len_bits > 0)
     cable_ft2232_write_bits(conn, &(buf[len_bytes]), len_bits, postread, 0);
 
-  if(len_tms_bits > 0) 
+  if(len_tms_bits > 0)
   {
     mybuf = (buf[len_bytes] >> len_bits);
     cable_ft2232_write_bits(conn, &mybuf, 1, postread, 1);
@@ -863,10 +863,10 @@ int cable_ft2232_read_stream(usbconn_t *conn, unsigned char *buf, int len, int w
 
 jtag_cable_t *cable_ftdi_get_driver(void)
 {
-  return &ft2232_cable_driver; 
+  return &ft2232_cable_driver;
 }
 
-int cable_ftdi_init() 
+int cable_ftdi_init()
 {
   int err = APP_ERR_NONE;
   int res = 0;
@@ -891,7 +891,7 @@ int cable_ftdi_init()
   buf[7]= ~0x04;
   buf[8]= 0x04;
   buf[9]= SEND_IMMEDIATE;
-  if(usbconn_ftdi_write(ft2232_device , buf, 10, 0) != 10) 
+  if(usbconn_ftdi_write(ft2232_device , buf, 10, 0) != 10)
   {
     err |= APP_ERR_USB;
     printf("Initial write failed\n");
@@ -902,15 +902,15 @@ int cable_ftdi_init()
   return err;
 }
 
-int cable_ftdi_close() 
+int cable_ftdi_close()
 {
   usbconn_ftdi_close(ft2232_device);
   usbconn_ftdi_free(ft2232_device);
-  
+
   return APP_ERR_NONE;
 }
 
-int cable_ftdi_flush() 
+int cable_ftdi_flush()
 {
   ftdi_param_t *params = ft2232_device->params;
   usbconn_ftdi_flush(params);
@@ -918,7 +918,7 @@ int cable_ftdi_flush()
   return APP_ERR_NONE;
 }
 
-int cable_ftdi_write_bit(uint8_t packet) 
+int cable_ftdi_write_bit(uint8_t packet)
 {
   int err = APP_ERR_NONE;
   unsigned char buf;
@@ -932,10 +932,10 @@ int cable_ftdi_write_bit(uint8_t packet)
 
   cable_ftdi_flush();
 
-  return err; 
+  return err;
 }
 
-int cable_ftdi_read_write_bit(uint8_t packet_out, uint8_t *bit_in) 
+int cable_ftdi_read_write_bit(uint8_t packet_out, uint8_t *bit_in)
 {
 
   int err = APP_ERR_NONE;
@@ -950,11 +950,11 @@ int cable_ftdi_read_write_bit(uint8_t packet_out, uint8_t *bit_in)
 
   if(cable_ft2232_read_stream(ft2232_device, ((unsigned char *)bit_in), 1, tms) < 0)
     err = APP_ERR_COMM;
-  
+
   return err;
 }
 
-int cable_ftdi_write_stream(uint32_t *stream, int len_bits, int set_last_bit) 
+int cable_ftdi_write_stream(uint32_t *stream, int len_bits, int set_last_bit)
 {
   int err = APP_ERR_NONE;
 
@@ -966,7 +966,7 @@ int cable_ftdi_write_stream(uint32_t *stream, int len_bits, int set_last_bit)
   return err;
 }
 
-int cable_ftdi_read_stream(uint32_t *outstream, uint32_t *instream, int len_bits, int set_last_bit) 
+int cable_ftdi_read_stream(uint32_t *outstream, uint32_t *instream, int len_bits, int set_last_bit)
 {
   int err = APP_ERR_NONE;
   if(cable_ft2232_write_stream(ft2232_device, ((unsigned char *)outstream), len_bits, 1, set_last_bit) < 0)
@@ -977,29 +977,29 @@ int cable_ftdi_read_stream(uint32_t *outstream, uint32_t *instream, int len_bits
   return err;
 }
 
-int cable_ftdi_opt(int c, char *str) 
+int cable_ftdi_opt(int c, char *str)
 {
   uint32_t newvid;
   uint32_t newpid;
 
   switch(c) {
     case 'p':
-      if(!sscanf(str, "%x", &newpid)) 
+      if(!sscanf(str, "%x", &newpid))
       {
         fprintf(stderr, "p parameter must have a hex number as parameter\n");
         return APP_ERR_BAD_PARAM;
       }
-      else 
+      else
         usbconn_ft2232_mpsse_CableID2.pid = newpid;
       break;
 
     case 'v':
-      if(!sscanf(str, "%x", &newvid)) 
+      if(!sscanf(str, "%x", &newvid))
       {
         fprintf(stderr, "v parameter must have a hex number as parameter\n");
         return APP_ERR_BAD_PARAM;
       }
-      else 
+      else
         usbconn_ft2232_mpsse_CableID2.vid = newvid;
       break;
 

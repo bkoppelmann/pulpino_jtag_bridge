@@ -1,24 +1,24 @@
 /* chain_commands.c -- JTAG protocol bridge between GDB and Advanced debug module.
    Copyright(C) 2008 - 2010 Nathan Yawn, nyawn@opencores.net
    based on code from jp2 by Marko Mlinar, markom@opencores.org
-   
+
    This file contains functions which perform mid-level transactions
    on a JTAG, such as setting a value in the TAP IR
    or doing a burst write on the JTAG chain.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
 
@@ -32,7 +32,7 @@
 #include "adv_dbg_commands.h"  // for the kludge in tap_reset()
 #include "errcodes.h"
 
-#define debug(...) if(0) fprintf(stderr, __VA_ARGS__ )
+#define debug(...) if (0) fprintf(stderr, __VA_ARGS__ )
 
 // How many tries before an abort
 #define NUM_SOFT_RETRIES 0
@@ -66,32 +66,32 @@ unsigned int global_jtag_cmd_debug = 0;        // Value to be shifted into the T
 ///////////////////////////////////////////////////////////////////////
 // Configuration
 
-void config_set_IR_size(int size) 
+void config_set_IR_size(int size)
 {
   global_IR_size = size;
 }
 
-void config_set_IR_prefix_bits(int bits) 
+void config_set_IR_prefix_bits(int bits)
 {
   global_IR_prefix_bits = bits;
 }
 
-void config_set_IR_postfix_bits(int bits) 
+void config_set_IR_postfix_bits(int bits)
 {
   global_IR_postfix_bits = bits;
 }
 
-void config_set_DR_prefix_bits(int bits) 
+void config_set_DR_prefix_bits(int bits)
 {
   global_DR_prefix_bits = bits;
 }
 
-void config_set_DR_postfix_bits(int bits) 
+void config_set_DR_postfix_bits(int bits)
 {
   global_DR_postfix_bits = bits;
 }
 
-void config_set_debug_cmd(unsigned int cmd) 
+void config_set_debug_cmd(unsigned int cmd)
 {
   global_jtag_cmd_debug = cmd;
 }
@@ -104,7 +104,7 @@ void config_set_debug_cmd(unsigned int cmd)
 /* Resets JTAG - Writes TRST=1, and TRST=0.  Sends 8 TMS to put the TAP
  * in test_logic_reset mode, for good measure.
  */
-int tap_reset(void) 
+int tap_reset(void)
 {
   int i;
   int err = APP_ERR_NONE;
@@ -116,11 +116,11 @@ int tap_reset(void)
   for(i = 0; i < 8; i++) err |= jtag_write_bit(TMS);
 
   // if TRST not supported, this puts us in test logic/reset
-  err |= jtag_write_bit(TRST);  
+  err |= jtag_write_bit(TRST);
   JTAG_RETRY_WAIT();
 
   // run test / idle
-  err |= jtag_write_bit(0);  
+  err |= jtag_write_bit(0);
   debug(")\n");
 
   // Reset data on current module/register selections
@@ -145,21 +145,21 @@ int tap_enable_debug_module(void)
  */
 uint32_t *ir_chain = NULL;
 
-int tap_set_ir(int ir) 
+int tap_set_ir(int ir)
 {
   int chain_size;
   int chain_size_words;
   int i;
   int startoffset, startshift;
   int err = APP_ERR_NONE;
-  
+
   // Adjust desired IR with prefix, postfix bits to set other devices in the chain to BYPASS
   chain_size = global_IR_size + global_IR_prefix_bits + global_IR_postfix_bits;
   chain_size_words = (chain_size/32)+1;
 
   // We have no way to know in advance how many bits there are in the combined IR register
-  if(ir_chain == NULL)  
-  { 
+  if(ir_chain == NULL)
+  {
     ir_chain = (uint32_t *) malloc(chain_size_words * sizeof(uint32_t));
     if(ir_chain == NULL)
       return APP_ERR_MALLOC;
@@ -173,11 +173,11 @@ int tap_set_ir(int ir)
   startshift = (global_IR_postfix_bits - (startoffset*32));
   ir_chain[startoffset] &= (ir << startshift);
   ir_chain[startoffset] |= ~(0xFFFFFFFF << startshift);  // Put the 1's back in the LSB positions
-  ir_chain[startoffset] |= (0xFFFFFFFF << (startshift + global_IR_size));  // Put 1's back in MSB positions, if any 
-  
+  ir_chain[startoffset] |= (0xFFFFFFFF << (startshift + global_IR_size));  // Put 1's back in MSB positions, if any
+
   // Deal with spill into the next word
-  if((startshift + global_IR_size) > 32) 
-  { 
+  if((startshift + global_IR_size) > 32)
+  {
     ir_chain[startoffset+1] &= ir >> (32-startshift);
     ir_chain[startoffset+1] |= (0xFFFFFFFF << (global_IR_size - (32-startshift)));  // Put the 1's back in the MSB positions
   }
@@ -188,7 +188,7 @@ int tap_set_ir(int ir)
   err |= jtag_write_bit(TMS); /* SELECT_IR SCAN */
 
   err |= jtag_write_bit(0); /* CAPTURE_IR */
-  err |= jtag_write_bit(0); /* SHIFT_IR */   
+  err |= jtag_write_bit(0); /* SHIFT_IR */
 
   /* write data, EXIT1_IR */
   debug("Setting IR, size %i, IR_size = %i, pre_size = %i, post_size = %i, data 0x%X\n", chain_size, global_IR_size, global_IR_prefix_bits, global_IR_postfix_bits, ir);
@@ -196,7 +196,7 @@ int tap_set_ir(int ir)
   debug("Done setting IR\n");
 
   err |= jtag_write_bit(TMS); /* UPDATE_IR */
-  err |= jtag_write_bit(0); /* IDLE */  
+  err |= jtag_write_bit(0); /* IDLE */
   current_chain = -1;
   return err;
 }
@@ -232,13 +232,13 @@ int tap_exit_to_idle(void)
 /* Writes TCLK=0, TRST=1, TMS=bit1, TDI=bit0
    and    TCLK=1, TRST=1, TMS=bit1, TDI=bit0
 */
-int jtag_write_bit(uint8_t packet) 
+int jtag_write_bit(uint8_t packet)
 {
   debug("Wbit(%i)\n", packet);
   return cable_write_bit(packet);
 }
 
-int jtag_read_write_bit(uint8_t packet, uint8_t *in_bit) 
+int jtag_read_write_bit(uint8_t packet, uint8_t *in_bit)
 {
   int retval = cable_read_write_bit(packet, in_bit);
   debug("RWbit(%i,%i)", packet, *in_bit);
@@ -256,7 +256,7 @@ int jtag_write_stream(uint32_t *out_data, int length_bits, unsigned char set_TMS
     err |= cable_write_stream(out_data, length_bits, 0);
   else if(global_DR_prefix_bits == 0)
     err |= cable_write_stream(out_data, length_bits, 1);
-  else 
+  else
   {
     err |= cable_write_stream(out_data, length_bits, 0);
     // It could be faster to do a cable_write_stream for all the prefix bits (if >= 8 bits),
@@ -277,7 +277,7 @@ int jtag_read_write_stream(uint32_t *out_data, uint32_t *in_data, int length_bit
   int i;
   int err = APP_ERR_NONE;
 
-  if(adjust && (global_DR_postfix_bits > 0)) 
+  if(adjust && (global_DR_postfix_bits > 0))
   {
     // It would be faster to do a cable_write_stream for all the postfix bits,
     // but we'd need a data array of unknown (and theoretically unlimited)
@@ -289,13 +289,13 @@ int jtag_read_write_stream(uint32_t *out_data, uint32_t *in_data, int length_bit
   // If there are both prefix and postfix bits, we may shift more bits than strictly necessary.
   // If we shifted out the data while burning through the postfix bits, these shifts could be subtracted
   // from the number of prefix shifts.  However, that way leads to madness.
-  if(!set_TMS)
-    err |= cable_read_write_stream(out_data, in_data, length_bits, 0);  
-  else if(global_DR_prefix_bits == 0)
-    err |= cable_read_write_stream(out_data, in_data, length_bits, 1);  
-  else 
+  if(!set_TMS) {
+    err |= cable_read_write_stream(out_data, in_data, length_bits, 0);
+  } else if(global_DR_prefix_bits == 0) {
+    err |= cable_read_write_stream(out_data, in_data, length_bits, 1);
+  } else
   {
-    err |= cable_read_write_stream(out_data, in_data, length_bits, 0); 
+    err |= cable_read_write_stream(out_data, in_data, length_bits, 0);
     // It would be faster to do a cable_write_stream for all the prefix bits,
     // but we'd need a data array of unknown (and theoretically unlimited)
     // size to hold the '0' bits to write.
@@ -310,7 +310,7 @@ int jtag_read_write_stream(uint32_t *out_data, uint32_t *in_data, int length_bit
 // This function attempts to determine the structure of the JTAG chain
 // It can determine how many devices are present.
 // If the devices support the IDCODE command, it will be read and stored.
-// There is no way to automatically determine the length of the IR registers - 
+// There is no way to automatically determine the length of the IR registers -
 // this must be read from a BSDL file, if IDCODE is supported.
 // When IDCODE is not supported, IR length of the target device must be entered on the command line.
 
@@ -331,9 +331,9 @@ int jtag_enumerate_chain(uint32_t **id_array, int *num_devices)
 
   // Malloc a reasonable number of entries, we'll expand if we must.  Linked lists are overrated.
   idcodes = (uint32_t *) malloc(ALLOC_SIZE*sizeof(uint32_t));
-  if(idcodes == NULL) 
-  { 
-    printf("Failed to allocate memory for device ID codes!\n"); 
+  if(idcodes == NULL)
+  {
+    printf("Failed to allocate memory for device ID codes!\n");
     return APP_ERR_MALLOC;
   }
 
@@ -346,54 +346,51 @@ int jtag_enumerate_chain(uint32_t **id_array, int *num_devices)
 
   // Putting a limit on the # of devices supported has the useful side effect
   // of insuring we still exit in error cases (we never get the 0x7f manuf. id)
-  while(devindex < MAX_DEVICES) 
+  while(devindex < MAX_DEVICES)
   {
     // get 1 bit. 0 = BYPASS, 1 = start of IDCODE
     err |= jtag_read_write_bit(invalid_code&0x01, &start_bit);
     invalid_code >>= 1;
-
-    if(start_bit == 0) 
+    if(start_bit == 0)
     {
-      if(devindex >= (ALLOC_SIZE << reallocs)) 
+      if(devindex >= (ALLOC_SIZE << reallocs))
       {  // Enlarge the memory array if necessary, double the size each time
         idcodes = (uint32_t *) realloc(idcodes, (ALLOC_SIZE << ++reallocs)*sizeof(uint32_t));
-        if(idcodes == NULL) 
-        { 
-          printf("Failed to allocate memory for device ID codes during enumeration!\n"); 
+        if(idcodes == NULL)
+        {
+          printf("Failed to allocate memory for device ID codes during enumeration!\n");
           return APP_ERR_MALLOC;
         }
       }
       idcodes[devindex] = -1;
       devindex++;
     }
-    else 
+    else
     {
       // get 11 bit manufacturer code
       err |= jtag_read_write_stream(&invalid_code, &temp_manuf_code, 11, 0, 0);
       invalid_code >>= 11;
-      
-      if(temp_manuf_code != done_code) 
+      if(temp_manuf_code != done_code)
       {
         // get 20 more bits, rest of ID
         err |= jtag_read_write_stream(&invalid_code, &temp_rest_code, 20, 0, 0);
         invalid_code >>= 20;
         tempID = (temp_rest_code << 12) | (temp_manuf_code << 1) | 0x01;
-
         // Enlarge the memory array if necessary, double the size each time
-        if(devindex >= (ALLOC_SIZE << reallocs)) 
-        {  
+        if(devindex >= (ALLOC_SIZE << reallocs))
+        {
           idcodes = (uint32_t *) realloc(idcodes, (ALLOC_SIZE << ++reallocs)*sizeof(unsigned long));
-          if(idcodes == NULL) 
-          { 
-            printf("Failed to allocate memory for device ID codes during enumeration!\n"); 
+          if(idcodes == NULL)
+          {
+            printf("Failed to allocate memory for device ID codes during enumeration!\n");
             return APP_ERR_MALLOC;
           }
         }
-        
+
         idcodes[devindex] = tempID;
         devindex++;
-      } 
-      else 
+      }
+      else
         break;
     }
 
@@ -407,7 +404,7 @@ int jtag_enumerate_chain(uint32_t **id_array, int *num_devices)
   // Put in IDLE mode
   err |= jtag_write_bit(TMS); /* EXIT1_DR */
   err |= jtag_write_bit(TMS); /* UPDATE_DR */
-  err |= jtag_write_bit(0); /* IDLE */ 
+  err |= jtag_write_bit(0); /* IDLE */
 
   *id_array = idcodes;
   *num_devices = devindex;
@@ -429,7 +426,7 @@ int jtag_get_idcode(uint32_t cmd, uint32_t *idcode)
 
   // Put in IDLE mode
   err |= jtag_write_bit(TMS); /* UPDATE_DR */
-  err |= jtag_write_bit(0); /* IDLE */ 
+  err |= jtag_write_bit(0); /* IDLE */
 
   return err;
 }
@@ -444,7 +441,7 @@ int jtag_set_debug(uint32_t cmd)
 
   // Put in IDLE mode
   //err |= jtag_write_bit(TMS); /* UPDATE_DR */
-  //err |= jtag_write_bit(0); /* IDLE */ 
+  //err |= jtag_write_bit(0); /* IDLE */
 
   return err;
 }
@@ -454,29 +451,29 @@ int jtag_set_debug(uint32_t cmd)
 
 /* counts retries and returns zero if we should abort */
 /* TODO: dynamically adjust timings */
-int retry_do() 
+int retry_do()
 {
   int err = APP_ERR_NONE;
 
-  if (soft_retry_no >= NUM_SOFT_RETRIES) 
+  if (soft_retry_no >= NUM_SOFT_RETRIES)
   {
       return 0;
 
       // *** TODO:  Add a 'hard retry', which re-initializes the cable, re-enumerates the bus, etc.
 
-  } 
-  else 
+  }
+  else
   {
-    if(err |= tap_reset()) 
+    if(err |= tap_reset())
     {
-      printf("Error %s while resetting for retry.\n", get_err_string(err)); 
+      printf("Error %s while resetting for retry.\n", get_err_string(err));
       return 0;
     }
 
     // Put us back into DEBUG mode
-    if(err |= tap_enable_debug_module()) 
+    if(err |= tap_enable_debug_module())
     {
-      printf("Error %s enabling debug module during retry.\n", get_err_string(err)); 
+      printf("Error %s enabling debug module during retry.\n", get_err_string(err));
       return 0;
     }
 
@@ -488,7 +485,7 @@ int retry_do()
 }
 
 /* resets retry counter */
-void retry_ok() 
+void retry_ok()
 {
   soft_retry_no = 0;
 }
