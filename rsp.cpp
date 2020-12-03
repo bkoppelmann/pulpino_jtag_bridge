@@ -362,6 +362,9 @@ Rsp::v_packet(char* data, size_t len) {
     this->send_str("OK");
     return false;
   }
+  else if (strncmp ("vMustReplyEmpty", data, strlen("vMustReplyEmpty")) == 0) {
+    return this->send_str("");
+  }
   else if (strncmp ("vCont?", data, strlen ("vCont?")) == 0)
   {
     return this->send_str("");
