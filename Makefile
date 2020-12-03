@@ -5,6 +5,8 @@ CXXFLAGS = -Wall -g -O -D__STDC_LIMIT_MACROS -DADBG_OPT_HISPEED -lftdi1
 OBJECTC = *.o
 RM = rm -rf
 
+PREFIX ?= .
+
 CSOURCES = \
 	errcodes.c \
 	utilities.c \
@@ -26,11 +28,11 @@ all: jtag_bridge
 
 jtag_bridge:
 	$(CC) $(CSOURCES) $(CFLAGS)
-	$(CXX) $(OBJECTC) $(CXXSOURCES) -o jtag_bridge $(CXXFLAGS)
+	$(CXX) $(OBJECTC) $(CXXSOURCES) -o $(PREFIX)/jtag_bridge $(CXXFLAGS)
 
 .PHONY: clean
 clean:
 	$(RM) ./*.gc??
 	$(RM) ./*.o
 	$(RM) ./*.so
-	$(RM) ./jtag_bridge
+	$(RM) $(PREFIX)/jtag_bridge
