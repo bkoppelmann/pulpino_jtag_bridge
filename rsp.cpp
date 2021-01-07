@@ -177,6 +177,8 @@ Rsp::decode(char* data, size_t len) {
 
   case 'D':
     this->send_str("OK");
+    this->resumeCores();
+    exit(0);
     return false;
 
   default:
